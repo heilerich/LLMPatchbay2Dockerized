@@ -98,8 +98,6 @@ Based on the Perl/Mojolicious source code you provided, here is a comprehensive 
 
 The LLMPatchbay backend exposes a comprehensive RESTful API for programmatically controlling workflows, managing data, and interacting with the system's components. All API endpoints are prefixed with `/LLM`.
 
-The API is primarily used by the Cappuccino GUI but is designed to be used by any HTTP client.
-
 ---
 
 ### Workflow Execution
