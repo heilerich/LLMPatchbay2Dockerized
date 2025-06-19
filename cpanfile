@@ -1,0 +1,17 @@
+requires "Cpanel::JSON::XS";
+requires "Mojolicious";
+requires "DBI";
+requires "DBD::Pg";
+requires "Mojo::Pg";
+requires "Mojolicious::Plugin::Database";
+requires "Data::Dumper";
+requires "POSIX";
+requires "Mojolicious::Plugin::RenderFile";
+requires "Mojo::JSON";
+requires "Mojo::Template";
+requires "Encode";
+requires "MIME::Lite";
+requires "Text::CSV";
+requires "Statistics::R";
+requires "JQ::Lite";
+requires "XML::XML2JSON";
