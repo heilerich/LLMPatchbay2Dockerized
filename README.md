@@ -9,4 +9,4 @@ docker run -p 3036:3036 patchbay
 
 Then open http://127.0.0.1:3036/Frontend/index.html in your browser.
 
-⚠️ Beware: All data is lost when the container is restarted.
+⚠️ Beware: All data are lost when the container is restarted.
