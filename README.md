@@ -9,7 +9,7 @@ This project is packaged as a self-contained Docker image that includes the Capp
 *   **Visual Workflow Engine:** A polished UI where you can connect processing blocks, craft prompts and evaluate the pipelines in a playground.
 *   **LLM Integration:**
     *   Connect to local models via **Ollama** (optional).
-    *   Integrate with external inference APIs.
+    *   Integrate with the AI-PIER inference API.
 *   **Vector Search (RAG):**
     *   Store and manage embedding datasets using `pgvector`.
     *   Perform dense retrieval (similarity search) for RAG pipelines.
