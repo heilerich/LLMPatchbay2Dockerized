@@ -6,7 +6,7 @@ This project is packaged as a self-contained Docker image that includes the Capp
 
 ## ✨ Features
 
-*   **Visual Workflow Engine:** A backend for a UI where you connect processing blocks.
+*   **Visual Workflow Engine:** A polished UI where you can connect processing blocks, craft prompts and evaluate the pipelines in a playground.
 *   **LLM Integration:**
     *   Connect to local models via **Ollama** (optional).
     *   Integrate with external inference APIs.
