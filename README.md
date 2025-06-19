@@ -79,7 +79,7 @@ The `Dockerfile` is prepared for Ollama integration, but it is commented out by 
     RUN /app/install_ollama.sh
 
     ```
-2.  **Re-build the Image:** You must rebuild the image for the change to take effect. Add models to install_ollama.sh as needed.
+2.  **Re-build the Image:** Add models to install_ollama.sh as needed. Then rebuild the image for the change to take effect.
     ```bash
     docker build . -t patchbay
     ```
