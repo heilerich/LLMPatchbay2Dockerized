@@ -43,7 +43,7 @@ docker run -d \
 *   `--name patchbay-app`: Give the container a memorable name.
 *   `-p 3036:3036`: Map the container's port to your local machine.
 *   `-v patchbay-data:/var/lib/postgresql/17/main`: **Crucial!** This creates a persistent volume named `patchbay-data` for the database.
-*   `-e API_BEARER_TOKEN="..."`: Sets your API key as an environment variable for better security.
+*   `-e API_BEARER_TOKEN="..."`: Sets your API key as an environment variable for AI-PIER access.
 
 ### 3. Access The Application
 Open your browser and navigate to:
