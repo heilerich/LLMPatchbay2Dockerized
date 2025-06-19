@@ -31,6 +31,8 @@ RUN /etc/init.d/postgresql start && \
     createdb -U docker llm_patchbay 2>&1 | tee /tmp/psql_createdb.log && \
     psql -U docker llm_patchbay < /app/sql_template.sql 2>&1 | tee /tmp/psql_import.log
 
+VOLUME /var/lib/postgresql/17/main
+
 # RUN curl -fsSL https://ollama.com/install.sh | sh
 # COPY install_ollama.sh /app
 # RUN /app/install_ollama.sh

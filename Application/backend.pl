@@ -18,7 +18,7 @@ use XML::XML2JSON;
 
 no warnings 'uninitialized';
 
-helper pg => sub { state $pg = Mojo::Pg->new('postgresql://postgres@localhost/llm_patchbay') };
+helper pg => sub { state $pg = Mojo::Pg->new('postgresql://docker:docker@localhost/llm_patchbay') };
 
 # turn browser cache off
 hook after_dispatch => sub {
@@ -457,9 +457,11 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
         $ua->inactivity_timeout(0);
         $ua->request_timeout(0);
         $ua->connect_timeout(0);
-        $ua->on(start => sub    {
+        $ua->on(start => sub {
             my ($ua, $tx) = @_;
-            $tx->req->headers->authorization("Bearer 36a3430b2d9473438a1447b5f24f69fc");
+            if (my $api_key = $ENV{API_BEARER_TOKEN}) {
+                $tx->req->headers->authorization("Bearer $api_key");
+            }
         });
 
         my $tx = $ua->post("https://inference-api.metal.kn.uniklinik-freiburg.de/llm/$model/generate" => json => $params);
