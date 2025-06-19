@@ -121,13 +121,13 @@ Executes a pre-defined pipeline using an entry from the `input_data` table and s
 Executes a pipeline with a given input without saving the result to the database. This is useful for testing or one-off executions.
 
 *   **Endpoint:** `POST /LLM/run_stateless/:key`
-*   **Description:** Runs a project/pipeline directly with the provided request body as the input.
+*   **Description:** Runs a prompt/pipeline directly with the provided request body as the input.
 *   **URL Parameters:**
-    *   `:key` (integer): The primary key (`id`) of the project (`projects` table).
+    *   `:key` (integer): The primary key (`id`) of the prompt/pipeline.
 *   **Request Body:** The raw input text for the pipeline.
 *   **Example:**
     ```bash
-    # Execute project with id=45 and provide "What is the capital of France?" as input
+    # Execute prompt with id=45 and provide "What is the capital of France?" as input
     curl -X POST \
       -H "Content-Type: text/plain" \
       -d "What is the capital of France?" \
