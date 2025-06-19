@@ -1,5 +1,16 @@
 #!/bin/sh
-/etc/init.d/postgresql start && hypnotoad -f /app/backend.pl
 
-# ollama support would go like this:
-# /etc/init.d/postgresql start && hypnotoad /app/backend.pl && ollama serve
+# Start the PostgreSQL service
+/etc/init.d/postgresql start
+
+# Check if the 'ollama' command exists and is executable
+if [ -x "$(command -v ollama)" ]; then
+  echo "Ollama detected, starting service in the background..."
+  ollama serve &
+else
+  echo "Ollama not found, skipping."
+fi
+
+# Start the main application in the foreground
+echo "Starting LLMPatchbay backend..."
+hypnotoad -f /app/backend.pl
