@@ -2,7 +2,7 @@
 
 LLMPatchbay is a powerful backend for building visual, block-based data processing and AI pipelines. It uses a "patch bay" metaphor, allowing you to connect various components—like LLM providers, databases, and custom logic—to create complex and repeatable workflows **and expose these via a RESTful API**.
 
-This project is packaged as a self-contained Docker image that includes the Perl/Mojolicious application, a PostgreSQL server with `pgvector`, and an R environment.
+This project is packaged as a self-contained Docker image that includes the Cappuccino based GUI, the Perl/Mojolicious backend, a PostgreSQL server with `pgvector`, and an R environment.
 
 ## ✨ Features
 
