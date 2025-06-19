@@ -94,10 +94,6 @@ Based on the Perl/Mojolicious source code you provided, here is a comprehensive 
 
 ---
 
-### **New Section for your `README.md`**
-
-(Copy and paste the following content)
-
 ## 🔌 API Documentation
 
 The LLMPatchbay backend exposes a comprehensive RESTful API for programmatically controlling workflows, managing data, and interacting with the system's components. All API endpoints are prefixed with `/LLM`.
@@ -207,9 +203,4 @@ These are specific endpoints for handling complex logic that doesn't fit the gen
       -d '{"template": "New search query template: %s"}' \
       http://127.0.0.1:3036/LLM/embedded_datasets/id/2
     ```
-
-#### Manage Block Settings
-*   **Endpoints:**
-    *   `GET /LLM/settings/id/:key`
-    *   `PUT /LLM/settings/id/:key`
-*   **Description:** These endpoints are used by the UI to read and write the `output_value` JSON for a specific block (`:key` is the block ID). This is how block-specific settings (like a model name or a regular expression) are configured.
+    
