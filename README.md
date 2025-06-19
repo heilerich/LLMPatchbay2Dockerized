@@ -70,9 +70,14 @@ The `Dockerfile` is prepared for Ollama integration, but it is commented out by 
     ```dockerfile
     # FROM:
     # RUN curl -fsSL https://ollama.com/install.sh | sh
-    
+    # COPY install_ollama.sh /app
+    # RUN /app/install_ollama.sh
+
     # TO:
     RUN curl -fsSL https://ollama.com/install.sh | sh
+    COPY install_ollama.sh /app
+    RUN /app/install_ollama.sh
+
     ```
 2.  **Re-build the Image:** You must rebuild the image for the change to take effect.
     ```bash
