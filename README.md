@@ -87,3 +87,129 @@ The `Dockerfile` is prepared for Ollama integration, but it is commented out by 
     ```bash
     docker exec -it patchbay-app ollama run gemma2
     ```
+
+Of course. Your updated `README.md` is very clear and provides a great foundation. Adding a detailed API documentation section is an excellent idea, as it makes the tool much more powerful for developers who want to integrate with it.
+
+Based on the Perl/Mojolicious source code you provided, here is a comprehensive API documentation section. You can copy and paste this directly into your `README.md` file, likely after the "Configuration" section.
+
+---
+
+### **New Section for your `README.md`**
+
+(Copy and paste the following content)
+
+## 🔌 API Documentation
+
+The LLMPatchbay backend exposes a comprehensive RESTful API for programmatically controlling workflows, managing data, and interacting with the system's components. All API endpoints are prefixed with `/LLM`.
+
+The API is primarily used by the Cappuccino GUI but is designed to be used by any HTTP client.
+
+---
+
+### Workflow Execution
+
+These endpoints are used to run the pipelines you build in the visual editor.
+
+#### Run a pipeline and save the result
+Executes a pre-defined pipeline using an entry from the `input_data` table and stores the output in `output_data`.
+
+*   **Endpoint:** `POST /LLM/run/:key`
+*   **Description:** Triggers a full run of the pipeline associated with the input data record.
+*   **URL Parameters:**
+    *   `:key` (integer): The primary key (`id`) of the record in the `input_data` table.
+*   **Example:**
+    ```bash
+    # Run the pipeline for the input data with id=123
+    curl -X POST http://127.0.0.1:3036/LLM/run/123
+    ```
+
+#### Run a pipeline statelessly
+Executes a pipeline with a given input without saving the result to the database. This is useful for testing or one-off executions.
+
+*   **Endpoint:** `POST /LLM/run_stateless/:key`
+*   **Description:** Runs a project/pipeline directly with the provided request body as the input.
+*   **URL Parameters:**
+    *   `:key` (integer): The primary key (`id`) of the project (`projects` table).
+*   **Request Body:** The raw input text for the pipeline.
+*   **Example:**
+    ```bash
+    # Execute project with id=45 and provide "What is the capital of France?" as input
+    curl -X POST \
+      -H "Content-Type: text/plain" \
+      -d "What is the capital of France?" \
+      http://127.0.0.1:3036/LLM/run_stateless/45
+    ```
+
+---
+
+### Dataset & Vector Management (RAG)
+
+These endpoints manage datasets used for Retrieval-Augmented Generation (RAG).
+
+#### Find similar documents in a dataset
+Performs a vector similarity search against a specified dataset.
+
+*   **Endpoint:** `POST /LLM/get_matches_from_dataset_named/:name`
+*   **Description:** Embeds the request body text and finds the most similar entries in the dataset.
+*   **URL Parameters:**
+    *   `:name` (string): The name of the dataset to search in.
+    *   `top_k` (integer, optional, default=1): The number of top matches to return.
+*   **Request Body:** The raw query text to find matches for.
+*   **Returns:** A JSON array of matching documents, including their payload, label, and similarity score.
+*   **Example:**
+    ```bash
+    # Find the top 3 documents in 'medical_reports' dataset similar to the query
+    curl -X POST \
+      -d "Patient shows symptoms of high fever and cough" \
+      "http://127.0.0.1:3036/LLM/get_matches_from_dataset_named/medical_reports?top_k=3"
+    ```
+
+#### Import data into a dataset
+Bulk-imports data from a CSV file into an embedding dataset. This triggers the embedding process for each new entry.
+
+*   **Endpoint:** `POST /LLM/import_embedding_dataset/:pk`
+*   **Description:** Processes a CSV file (semicolon-separated) with `label` and `payload` columns.
+*   **URL Parameters:**
+    *   `:pk` (integer): The ID of the dataset to import into.
+    *   `preserve=1` (optional): If set, skips importing rows that are duplicates (based on label and payload).
+    *   `remove=1` (optional): If set, deletes rows from the database that match the CSV content instead of adding them.
+*   **Request Body:** The CSV data.
+*   **Example:**
+    ```bash
+    # Import data from data.csv into dataset 1, skipping duplicates
+    curl -X POST \
+      --header "Content-Type: text/csv" \
+      --data-binary "@path/to/data.csv" \
+      "http://127.0.0.1:3036/LLM/import_embedding_dataset/1?preserve=1"
+    ```
+
+#### Retrieve all data from a dataset
+*   **Endpoint:** `GET /LLM/get_data_from_dataset/:dataset_name`
+*   **Example:** `curl http://127.0.0.1:3036/LLM/get_data_from_dataset/medical_reports`
+
+#### Retrieve a specific data point by label
+*   **Endpoint:** `GET /LLM/get_payload_for_label_from_dataset/:label/:dataset_name`
+*   **Example:** `curl http://127.0.0.1:3036/LLM/get_payload_for_label_from_dataset/report-abc/medical_reports`
+
+---
+
+### Specialized Endpoints
+
+These are specific endpoints for handling complex logic that doesn't fit the generic CRUD pattern.
+
+#### Update an embedding dataset (and trigger re-embedding)
+*   **Endpoint:** `PUT /LLM/embedded_datasets/id/:key`
+*   **Description:** Updates a dataset's properties. **Important:** If the `template` or `idembedding_model` is changed, this API call will automatically trigger a re-embedding of all data points within that dataset. This can be a long-running operation.
+*   **Example:**
+    ```bash
+    # Change the template for dataset 2, triggering a re-embedding
+    curl -X PUT -H "Content-Type: application/json" \
+      -d '{"template": "New search query template: %s"}' \
+      http://127.0.0.1:3036/LLM/embedded_datasets/id/2
+    ```
+
+#### Manage Block Settings
+*   **Endpoints:**
+    *   `GET /LLM/settings/id/:key`
+    *   `PUT /LLM/settings/id/:key`
+*   **Description:** These endpoints are used by the UI to read and write the `output_value` JSON for a specific block (`:key` is the block ID). This is how block-specific settings (like a model name or a regular expression) are configured.
