@@ -21,7 +21,7 @@ This project is packaged as a self-contained Docker image that includes the Perl
 
 ### 1. Build the Docker Image
 
-From the root of the project, run the build command. This will install all dependencies, set up the PostgreSQL server, and initialize the database schema from `sql_template.sql`.
+From the root of the project, run the build command. This will install all dependencies, set up the PostgreSQL server, and initialize the database schema.
 
 ```bash
 docker build . -t patchbay
