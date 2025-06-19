@@ -1,6 +1,6 @@
 # LLMPatchbay: Visual AI Workflow Engine
 
-LLMPatchbay is a powerful backend for building visual, block-based data processing and AI pipelines. It uses a "patch bay" metaphor, allowing you to connect various components—like LLM providers, databases, and custom logic—to create complex and repeatable workflows.
+LLMPatchbay is a powerful backend for building visual, block-based data processing and AI pipelines. It uses a "patch bay" metaphor, allowing you to connect various components—like LLM providers, databases, and custom logic—to create complex and repeatable workflows **and expose these to a RESTFul API**.
 
 This project is packaged as a self-contained Docker image that includes the Perl/Mojolicious application, a PostgreSQL server with `pgvector`, and an R environment.
 
@@ -21,7 +21,7 @@ This project is packaged as a self-contained Docker image that includes the Perl
 
 ### 1. Build the Docker Image
 
-From the root of the project, run the build command. This will install all dependencies, set up the PostgreSQL server, and initialize the database schema from `sql_template.sql`.
+From the root of the project, run the build command. This will install all dependencies, set up the PostgreSQL server, and initialize the database schema.
 
 ```bash
 docker build . -t patchbay
@@ -70,9 +70,14 @@ The `Dockerfile` is prepared for Ollama integration, but it is commented out by 
     ```dockerfile
     # FROM:
     # RUN curl -fsSL https://ollama.com/install.sh | sh
-    
+    # COPY install_ollama.sh /app
+    # RUN /app/install_ollama.sh
+
     # TO:
     RUN curl -fsSL https://ollama.com/install.sh | sh
+    COPY install_ollama.sh /app
+    RUN /app/install_ollama.sh
+
     ```
 2.  **Re-build the Image:** You must rebuild the image for the change to take effect.
     ```bash
