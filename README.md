@@ -79,19 +79,10 @@ The `Dockerfile` is prepared for Ollama integration, but it is commented out by 
     RUN /app/install_ollama.sh
 
     ```
-2.  **Re-build the Image:** You must rebuild the image for the change to take effect.
+2.  **Re-build the Image:** You must rebuild the image for the change to take effect. Add models to install_ollama.sh as needed.
     ```bash
     docker build . -t patchbay
     ```
-3.  **Use Ollama in `entrypoint.sh`:** Your `entrypoint.sh` script should be updated to start the Ollama service alongside your other services. You can then pull models by executing a command inside the running container:
-    ```bash
-    docker exec -it patchbay-app ollama run gemma2
-    ```
-
-Of course. Your updated `README.md` is very clear and provides a great foundation. Adding a detailed API documentation section is an excellent idea, as it makes the tool much more powerful for developers who want to integrate with it.
-
-Based on the Perl/Mojolicious source code you provided, here is a comprehensive API documentation section. You can copy and paste this directly into your `README.md` file, likely after the "Configuration" section.
-
 ---
 
 ## 🔌 API Documentation
