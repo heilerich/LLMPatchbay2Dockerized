@@ -109,7 +109,7 @@ Executes a pre-defined pipeline using an entry from the `input_data` table and s
     ```
 
 #### Run a pipeline statelessly
-Executes a pipeline with a given input without saving the result to the database. This is useful for testing or one-off executions.
+Executes a pipeline with a given input without saving the result to the database. This is useful for integrating the workflows into your own applications.
 
 *   **Endpoint:** `POST /LLM/run_stateless/:key`
 *   **Description:** Runs a prompt/pipeline directly with the provided request body as the input.
