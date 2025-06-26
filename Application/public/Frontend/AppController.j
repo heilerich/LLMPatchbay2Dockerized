@@ -113,6 +113,7 @@ BaseURL=HostURL+"/";
     id importCSVText;
     
     id  _searchTerm @accessors(property=searchTerm);
+    id  _playgroundSearchTerm @accessors(property=playgroundSearchTerm);
 
 }
 
@@ -134,6 +135,14 @@ BaseURL=HostURL+"/";
         [embeddedDataController setFilterPredicate:[CPPredicate predicateWithFormat:"payload CONTAINS[cd] %@ or label = %@", aTerm, aTerm]];
     else
         [embeddedDataController setFilterPredicate:nil];
+}
+
+- (void)setPlaygroundSearchTerm:(id)aTerm
+{
+    if (aTerm && aTerm.length)
+        [inputController setFilterPredicate:[CPPredicate predicateWithFormat:"content CONTAINS[cd] %@ or title CONTAINS[cd] %@", aTerm, aTerm]];
+    else
+        [inputController setFilterPredicate:nil];
 }
 
 -(void)setButtonBusy:(CPButton)myButton

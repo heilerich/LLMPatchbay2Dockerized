@@ -78,6 +78,10 @@
                     <vbox>
                         <splitView vertical="YES" autosaveName="vsplitter_main_llm_1">
                             <vbox width="100">
+                                <hbox>
+                                    <searchField valueBinding="#CPOwner.playgroundSearchTerm" halign="min" width="200"/>
+                                    <hspace/>
+                                </hbox>
                                 <scrollView hasHorizontalScroller="YES">
                                     <tableView zebra="yes"  autosaveName="inputs_tv" valueBinding="#CPOwner.inputController" target="#CPOwner" allowsEmptySelection="NO">
                                         <tableColumn identifier="title" title="name" editable="YES"/>
