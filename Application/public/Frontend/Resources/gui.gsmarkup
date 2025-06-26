@@ -59,7 +59,9 @@
                                         <tableColumn identifier="name" title="name" editable="YES"/>
                                     </tableView>
                                 </scrollView>
-                                <ButtonBar target="#CPOwner.projectsController" actionsButton="NO" minusButtonAction="remove:" plusButtonAction="insert:"/>
+                                <ButtonBar target="#CPOwner.projectsController" actionsButton="YES" minusButtonAction="remove:" plusButtonAction="insert:">
+                                    <popUpButtonItem title="Duplicate current prompt" target="#CPOwner" action="duplicatePrompt:"/>
+                                </ButtonBar>
                             </vbox>
                             <vbox>
                                 <hbox>

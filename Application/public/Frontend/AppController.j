@@ -195,6 +195,15 @@ BaseURL=HostURL+"/";
     [self openWindowWithURL:'/LLM/get_data_from_dataset/' + [embeddedDatasetsController valueForKeyPath:'selection.name'] inWindowID:'download_window'];
 }
 
+- (void)duplicatePrompt:(id)sender
+{
+    var myreq = [CPURLRequest requestWithURL:"/LLM/duplicate_prompt/" + [projectsController valueForKeyPath:"selection.id"]];
+    [myreq setHTTPMethod:"POST"];
+    var connection = [CPURLConnection connectionWithRequest:myreq delegate:self];
+    [self setButtonBusy:sender];
+    connection._senderButton = sender;
+}
+
 - (void)run:(id)sender
 {
     [self flushGUI];
@@ -243,9 +252,16 @@ BaseURL=HostURL+"/";
     if (someConnection._senderButton && [someConnection._senderButton isKindOfClass:CPButton])
         [self resetButtonBusy:someConnection._senderButton];
 
+    if ([[[[someConnection currentRequest] URL] absoluteString] containsString:@"/LLM/duplicate_prompt/"])
+    {
+        [[TNGrowlCenter defaultCenter] pushNotificationWithTitle:@"Success" message:@"Prompt duplicated." customIcon:TNGrowlIconInfo];
+        [projectsController reload];
+        return;
+    }
+
     var result = JSON.parse(data);
 
-    [[TNGrowlCenter defaultCenter] pushNotificationWithTitle:"Result" message:result['result'] customIcon:TNGrowlIconInfo];
+    [[TNGrowlCenter defaultCenter] pushNotificationWithTitle:@"Result" message:result['result'] customIcon:TNGrowlIconInfo];
 
     [outputController reload];
 }
