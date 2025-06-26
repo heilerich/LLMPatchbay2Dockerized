@@ -252,7 +252,7 @@ BaseURL=HostURL+"/";
     if (someConnection._senderButton && [someConnection._senderButton isKindOfClass:CPButton])
         [self resetButtonBusy:someConnection._senderButton];
 
-    if ([[[[someConnection currentRequest] URL] absoluteString] containsString:@"/LLM/duplicate_prompt/"])
+    if ([[[someConnection currentRequest] URL] absoluteString].indexOf("/LLM/duplicate_prompt/") >= 0)
     {
         [[TNGrowlCenter defaultCenter] pushNotificationWithTitle:@"Success" message:@"Prompt duplicated." customIcon:TNGrowlIconInfo];
         [projectsController reload];
