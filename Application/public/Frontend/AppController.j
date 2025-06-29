@@ -114,7 +114,40 @@ BaseURL=HostURL+"/";
     
     id  _searchTerm @accessors(property=searchTerm);
     id  _playgroundSearchTerm @accessors(property=playgroundSearchTerm);
+    id  playgroundTV;
 
+}
+
+// this is just to force the prompts popup items in the playground such in case a new prompt is added and the user wants to test it immediately
+- (void)tabView:(CPTabView)aTabView willSelectTabViewItem:(CPTabViewItem)aTabViewItem
+{
+    if ([aTabViewItem label] == "Playground")
+    {
+        // refresh archived data in the tableview column
+        var promptColumn = [playgroundTV tableColumnWithIdentifier:"idprompt"];
+        var prototypeButton = [promptColumn dataView];
+        [promptColumn setDataView:nil];
+        [promptColumn setDataView:prototypeButton];
+
+        // remove stale views from the screen
+        for (var row in playgroundTV._dataViewsForRows) {
+            if (playgroundTV._dataViewsForRows.hasOwnProperty(row)) {
+                var columnsForRow = playgroundTV._dataViewsForRows[row];
+                for (var columnUID in columnsForRow) {
+                    if (columnsForRow.hasOwnProperty(columnUID)) {
+                        var view = columnsForRow[columnUID];
+                        [view removeFromSuperview];
+                    }
+                }
+            }
+        }
+
+        // nuke private caches
+        playgroundTV._cachedDataViews = {};
+        playgroundTV._dataViewsForRows = {};
+        // redraw
+        [playgroundTV reloadData];
+    }
 }
 
 - (void)flushGUI

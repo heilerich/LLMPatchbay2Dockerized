@@ -48,7 +48,7 @@
 
     <window bridge="YES" id="mainwindow" delegate="#CPOwner">
         <vbox>
-            <tabView type="topBezel">
+            <tabView type="topBezel" delegate="#CPOwner">
                 <tabViewItem title="Prompts">
                     <vbox>
                         <splitView vertical="YES" autosaveName="vsplitter_main_llm_0a">
@@ -178,6 +178,7 @@
     <outlet source="CPOwner" target="input_window" label="inputWindow"/>
     <outlet source="CPOwner" target="input_text" label="inputText"/>
     <outlet source="CPOwner" target="import_csv_text" label="importCSVText"/>
+    <outlet source="CPOwner" target="playground_tv" label="playgroundTV"/>
 </connectors>
 
 
