@@ -8,8 +8,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN  apt-get update && apt-get install make g++ curl wget checkinstall -y 
 
+# Added 'pandoc' to the list of installed packages
 RUN apt-get update && \
-  apt-get install perl cpanminus libio-socket-ssl-perl postgresql postgresql-server-dev-17 postgresql-17-pgvector libpq-dev libdbd-pg-perl r-base r-recommended -y && \
+  apt-get install perl cpanminus pandoc libio-socket-ssl-perl postgresql postgresql-server-dev-17 postgresql-17-pgvector libpq-dev libdbd-pg-perl r-base r-recommended -y && \
   cpanm -v -f --installdeps . -M https://cpan.metacpan.org && \
   rm -rf /root/.cpanm/* /usr/local/share/man/*
 

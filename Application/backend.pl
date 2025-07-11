@@ -33,11 +33,11 @@ get '/LLM/get_data_from_dataset/:dataset_name' => sub
     my $self          = shift;
     my $dataset_name  = $self->param('dataset_name');
     my $datapoints    = $self->pg->db->query(  q{
-                                                    select embedded_data.*
-                                                    from embedded_datasets
-                                                    join embedded_data on embedded_datasets.id = idembedded_datasets
-                                                    where embedded_datasets.name = ?
-                                                }, $dataset_name)->hashes;
+        select embedded_data.*
+        from embedded_datasets
+        join embedded_data on embedded_datasets.id = idembedded_datasets
+        where embedded_datasets.name = ?
+    }, $dataset_name)->hashes;
     $self->render(json => $datapoints);
 };
 
@@ -47,11 +47,11 @@ get '/LLM/get_payload_for_label_from_dataset/:label/:dataset_name' => sub
     my $dataset_name  = $self->param('dataset_name');
     my $label         = $self->param('label');
     my $datapoint     = $self->pg->db->query(  q{
-                                                    select embedded_data.*
-                                                    from embedded_datasets
-                                                    join embedded_data on embedded_datasets.id = idembedded_datasets
-                                                    where embedded_datasets.name = ? and label ~* ?
-                                                }, $dataset_name, $label)->hash;
+        select embedded_data.*
+        from embedded_datasets
+        join embedded_data on embedded_datasets.id = idembedded_datasets
+        where embedded_datasets.name = ? and label ~* ?
+    }, $dataset_name, $label)->hash;
 
     $self->render(json => $datapoint);
 };
@@ -63,10 +63,10 @@ post '/LLM/get_matches_from_dataset_named/:name' => sub
     my $dataset_name  = $self->param('name');
     my $top_k         = $self->param('top_k') || 1;
     my $dataset       = $self->pg->db->query(  q{
-                                                     select embedding_models.name, embedded_datasets.id as iddataset, template, storage_entity, embedding_endpoint from embedded_datasets
-                                                     join embedding_models on embedding_models.id = idembedding_model
-                                                     where embedded_datasets.name = ?
-                                                }, $dataset_name)->hash;
+        select embedding_models.name, embedded_datasets.id as iddataset, template, storage_entity, embedding_endpoint from embedded_datasets
+        join embedding_models on embedding_models.id = idembedding_model
+        where embedded_datasets.name = ?
+    }, $dataset_name)->hash;
     unless ($dataset)
     {
         $self->render(text => 'NOK');
@@ -83,13 +83,13 @@ post '/LLM/get_matches_from_dataset_named/:name' => sub
     }
 
     my $sql = qq{
-                    select payload, label, 1 - ($storage_entity.embedding <=> ?) AS similarity
+        select payload, label, 1 - ($storage_entity.embedding <=> ?) AS similarity
 
-                    from $storage_entity
-                    join embedded_data on embedded_data.id = iddata
-                    WHERE idembedded_datasets = ?
-                    order by 3 desc limit ?
-                };
+        from $storage_entity
+        join embedded_data on embedded_data.id = iddata
+        WHERE idembedded_datasets = ?
+        order by 3 desc limit ?
+    };
 
     $self->render(json => $self->pg->db->query($sql, $query_embedding, $dataset->{iddataset}, $top_k)->hashes);
 };
@@ -102,10 +102,10 @@ post '/LLM/import_embedding_dataset/:pk' => [pk => qr/\d+/] => sub
     my $remove       = $self->param('remove');
 
     my $dataset = $self->pg->db->query(q{
-                                            select embedding_models.name, storage_entity, embedding_endpoint, template from embedded_datasets
-                                            join embedding_models on embedding_models.id = idembedding_model
-                                            where embedded_datasets.id = ?
-                                        }, $pk)->hash;
+        select embedding_models.name, storage_entity, embedding_endpoint, template from embedded_datasets
+        join embedding_models on embedding_models.id = idembedding_model
+        where embedded_datasets.id = ?
+    }, $pk)->hash;
 
     $self->pg->db->delete('embedded_data', {idembedded_datasets => $pk}) unless $preserve || $remove;
 
@@ -318,10 +318,10 @@ put '/LLM/embedded_datasets/id/:key' => [key => qr/\d+/] => sub
     # refetch and re-embed the data
 
     my $dataset = $self->pg->db->query(q{
-                                            select embedding_models.name, storage_entity, embedding_endpoint, template from embedded_datasets
-                                            join embedding_models on embedding_models.id = idembedding_model
-                                            where embedded_datasets.id = ?
-                                        }, $pk)->hash;
+        select embedding_models.name, storage_entity, embedding_endpoint, template from embedded_datasets
+        join embedding_models on embedding_models.id = idembedding_model
+        where embedded_datasets.id = ?
+    }, $pk)->hash;
 
     if (!exists $u->{template} && !exists $u->{idembedding_model})
     {
@@ -361,7 +361,7 @@ post '/LLM/:table/:pk'=> sub
     $u->{content} = 'Content goes here...' if !$u->{content} && $table eq 'input_data';
 
     delete $u->{name}                                        if $table eq 'input_data';
-    
+
     my $id = $self->pg->db->insert($table, $u, {returning => $self->param('pk')})->hash->{id};
 
     $self->render(json => {err => $DBI::errstr, pk => $id});
@@ -385,11 +385,11 @@ del '/LLM/:table/:pk/:key' => [key=>qr/\d+/] => sub
 helper get_result_of_patchbay_named => sub { my ($self, $name, $input) = @_;
 
     my $id = $self->pg->db->query(q/
-                                    select max(blocks.id) as id from projects
-                                    join blocks on blocks.idproject=projects.id
-                                    join blocks_catalogue on idblock =  blocks_catalogue.id
-                                    where projects.name = ? and blocks_catalogue.type != 8 and outputs is null and connections != '{}'
-                                   /, $name)->hash()->{id};
+    select max(blocks.id) as id from projects
+    join blocks on blocks.idproject=projects.id
+    join blocks_catalogue on idblock =  blocks_catalogue.id
+    where projects.name = ? and blocks_catalogue.type != 8 and outputs is null and connections != '{}'
+    /, $name)->hash()->{id};
 
     return $self->get_result_of_block_id($id, $input);
 };
@@ -450,18 +450,18 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
             prompt => $prompt,
             stream =>  Mojo::JSON->false,
             options =>  {
-                            temperature => $temperature + 0,
-                            num_ctx => $num_ctx + 0,
-                            num_predict => $max_gen + 0
-                        }
+                temperature => $temperature + 0,
+                num_ctx => $num_ctx + 0,
+                num_predict => $max_gen + 0
+            }
         };
-        
+
         $json->{images} = [$image] if $image; # multimodal support
         warn Dumper $json;
-        
+
         my $res = $ua->post($url => json => $json)->result;
         warn Dumper $res;
-        
+
         if ($res->is_success)
         {
             warn $res->json->{response};
@@ -488,7 +488,7 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
         my $prompt      = $self->prepare_llm_prompt($inputs->{Input}, $inputs->{PromptTemplate});
         my $stop_tokens = decode_json(encode 'UTF-8', $settings->{stop}) || [];
         my $grammar     = $settings->{grammar};
-        
+
         my $params = {
             inputs => $prompt,
             parameters =>
@@ -503,9 +503,9 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
         if ($grammar eq '1' || $grammar eq '2') # regexp
         {
             $params->{parameters}->{grammar}->{type} = $grammar eq '1' ? 'regex' : 'json';
-            
+
             my $json = decode_json(encode 'UTF-8', $settings->{grammar_text}) || {};
-            
+
             foreach my $key (keys %{$json})
             {
                 $params->{parameters}->{grammar}->{$key} = $json->{$key};
@@ -515,9 +515,9 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
         {
             $params->{parameters}->{do_sample} = Mojo::JSON->false;
         }
-        
+
         warn Dumper $params;
-        
+
         my $ua = Mojo::UserAgent->new;
         $ua->inactivity_timeout(0);
         $ua->request_timeout(0);
@@ -532,7 +532,7 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
         my $tx = $ua->post("https://inference-api.metal.kn.uniklinik-freiburg.de/llm/$model/generate" => json => $params);
         # warn Dumper $tx;
         my $r = $tx->res->json;
-        
+
         return $r->{generated_text} if exists $r->{generated_text};
         return undef;
     }
@@ -542,7 +542,7 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
 
         my $settings = $current_block->{output_value} ? decode_json($current_block->{output_value}) : {};
         my $result   = $self->run_llm($prompt, 'phi-4', $settings->{max_tokens}, $inputs->{SystemPrompt}, $settings->{is_nongreedy});
-         warn "$prompt -> $result";
+        warn "$prompt -> $result";
         return $result;
     }
     elsif ($current_block->{type} eq '43') # deepseek
@@ -699,10 +699,10 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
         my $top_k         = $settings->{top_k};
         my $is_json       = $settings->{is_json};
         my $dataset       = $self->pg->db->query(  q{
-                                                        select embedding_models.name, embedded_datasets.id as iddataset, template, storage_entity, embedding_endpoint from embedded_datasets
-                                                        join embedding_models on embedding_models.id = idembedding_model
-                                                        where embedded_datasets.name = ?
-                                                    }, $dataset_name)->hash;
+            select embedding_models.name, embedded_datasets.id as iddataset, template, storage_entity, embedding_endpoint from embedded_datasets
+            join embedding_models on embedding_models.id = idembedding_model
+            where embedded_datasets.name = ?
+        }, $dataset_name)->hash;
 
         # warn $dataset_name;
         # warn Dumper $settings;
@@ -716,37 +716,37 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
         if ($is_json)
         {
             my @ret;
-            
+
             my $arr = $inputs->{Input} ? decode_json(encode 'UTF-8', $inputs->{Input}) : [];
 
             foreach my $part (@$arr)
             {
-               my $query_embedding = $self->get_embedding($dataset->{embedding_endpoint}, $dataset->{name}, $part, $dataset->{template});
-               my $sql = qq{
-                                select payload, label, 1 - ($storage_entity.embedding <=> ?) AS similarity
+                my $query_embedding = $self->get_embedding($dataset->{embedding_endpoint}, $dataset->{name}, $part, $dataset->{template});
+                my $sql = qq{
+                    select payload, label, 1 - ($storage_entity.embedding <=> ?) AS similarity
 
-                                from $storage_entity
-                                join embedded_data on embedded_data.id = iddata
-                                WHERE idembedded_datasets = ?
-                                order by 3 desc limit ?
-                            };
+                    from $storage_entity
+                    join embedded_data on embedded_data.id = iddata
+                    WHERE idembedded_datasets = ?
+                    order by 3 desc limit ?
+                };
                 my $matches = $self->pg->db->query($sql, $query_embedding, $dataset->{iddataset}, $top_k)->hashes;
                 push @ret, $matches;
             }
 
             return Mojo::JSON::encode_json(\@ret);
         }
-        
+
         my $query_embedding = $self->get_embedding($dataset->{embedding_endpoint}, $dataset->{name}, $inputs->{Input}, $dataset->{template});
 
         my $sql = qq{
-                        select payload, label, 1 - ($storage_entity.embedding <=> ?) AS similarity
+            select payload, label, 1 - ($storage_entity.embedding <=> ?) AS similarity
 
-                        from $storage_entity
-                        join embedded_data on embedded_data.id = iddata
-                        WHERE idembedded_datasets = ?
-                        order by 3 desc limit ?
-                    };
+            from $storage_entity
+            join embedded_data on embedded_data.id = iddata
+            WHERE idembedded_datasets = ?
+            order by 3 desc limit ?
+        };
         my $ret = $self->pg->db->query($sql, $query_embedding, $dataset->{iddataset}, $top_k)->hashes;
         warn Dumper $ret;
         return Mojo::JSON::encode_json($ret);
@@ -776,6 +776,38 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
         my $jq = JQ::Lite->new;
         my @results = $jq->run_query($inputs->{Input}, $current_block->{output_value});
         return Mojo::JSON::encode_json(\@results);
+    }
+
+    elsif ($current_block->{type} eq '47') # pandoc converter (formerly unrtf)
+    {
+        my $settings    = $current_block->{output_value} ? decode_json($current_block->{output_value}) : {};
+        my $input_data  = $inputs->{Input};
+        return '' unless $input_data;
+
+        # Determine the input format from block settings, defaulting to 'rtf'.
+        my $from_format = $settings->{from_format} || 'rtf';
+
+        # Sanitize the format to prevent command injection.
+        # Allows alphanumeric chars, underscore, plus, and minus for pandoc extensions (e.g., 'markdown+smart').
+        if ($from_format !~ /^[\w\+\-]+$/) {
+            warn "Invalid pandoc 'from_format' specified: '$from_format'. Falling back to 'rtf'.";
+            $from_format = 'rtf';
+        }
+
+        # Determine the output format. 'markdown' if true, otherwise 'plain' text.
+        my $to_format = $settings->{markdown} ? 'markdown' : 'plain';
+
+        # Write input to a temporary file to safely pass it to pandoc
+        my $temp_in_file = Mojo::File->new(Mojo::File::tempfile());
+        $temp_in_file->spurt($input_data);
+
+        # Use backticks to execute pandoc and capture its STDOUT.
+        # Formats are sanitized and input is passed via file to avoid shell injection.
+        my $command = "pandoc -f $from_format -t $to_format " . $temp_in_file->to_string;
+        my $output  = `$command`;
+
+        # The temp file is automatically removed when $temp_in_file goes out of scope.
+        return $output;
     }
 
     return $result;
@@ -910,7 +942,7 @@ helper run_llm => sub { my ($self, $prompt, $model, $max_tokens, $system_prompt,
     # trim whitespace
     $text =~s/\s+$//os;
     $text =~s/^\s+//os;
-    
+
     $self->pg->db->insert('llm_usage_log', {model => $model, prompt => $prompt, response => $text});
 
     return $text;
