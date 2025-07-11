@@ -15,7 +15,7 @@ use Statistics::R;
 use MIME::Base64;
 use JQ::Lite;
 use XML::XML2JSON;
-use Archive::Zip qw(:constants);
+use Archive::Zip;
 
 no warnings 'uninitialized';
 
@@ -951,19 +951,14 @@ helper run_llm => sub { my ($self, $prompt, $model, $max_tokens, $system_prompt,
 
 post '/LLM/upload' => sub {
     my $self = shift;
-    my $upload_dir = '/upload'; # IMPORTANT: This directory must be writable by the user running the web server.
+    my $upload_dir = '/tmp/upload'; # IMPORTANT: This directory must be writable by the user running the web server.
 
-    # 1. Get all uploaded files from the request.
-    # The form field name in your HTML form should be "files[]".
     my $uploads = $self->req->uploads('files[]');
 
-    # 2. Ensure we have at least one file uploaded.
     unless (scalar @$uploads) {
         return $self->render(status => 400, json => {error => 'No files uploaded. Please use the form field named "files[]".'});
     }
 
-    # 3. Ensure the destination directory exists. Create it if it doesn't.
-    # It's more efficient to do this once before the loop.
     my $dir_path = Mojo::File->new($upload_dir);
     eval {
         $dir_path->make_path unless -d $dir_path;
@@ -973,28 +968,35 @@ post '/LLM/upload' => sub {
         return $self->render(status => 500, json => {error => "Server configuration error: Could not create upload directory."});
     }
 
-    my @results; # To keep track of what happened to each file.
+    my @results;
 
-    # 4. Process each uploaded file
     for my $upload (@$uploads) {
         my $filename = $upload->filename;
         my $content_type = $upload->headers->content_type;
 
-        # 5. Check if the file is a ZIP archive
         if ($filename =~ /\.zip$/i && ($content_type eq 'application/zip' || $content_type eq 'application/x-zip-compressed')) {
-            # This is a ZIP file, so we unpack it
-            my $zip      = Archive::Zip->new();
-            my $zip_path = $upload->asset->path; # Get the path to the temporary uploaded file
+            # --- START OF THE FIX ---
 
-            if ($zip->read($zip_path) != AZ_OK) {
-                $self->app->log->error("Could not read zip file '$filename' from temp path '$zip_path'.");
-                # Stop processing and report failure for this file
+            # Create a temporary file to reliably store the upload,
+            # regardless of whether it's in memory or on disk initially.
+            my $temp_zip_file = Mojo::File::tempfile();
+            my $temp_zip_path = $temp_zip_file->to_string;
+
+            # Move the uploaded content to our temp file. This works for both
+            # Mojo::Asset::Memory and Mojo::Asset::File.
+            $upload->move_to($temp_zip_path);
+
+            # Now we can safely use our temp file path with Archive::Zip
+            my $zip = Archive::Zip->new();
+
+            if ($zip->read($temp_zip_path) != Archive::Zip::AZ_OK) {
+                $self->app->log->error("Could not read zip file '$filename' from its temp path '$temp_zip_path'.");
                 return $self->render(status => 500, json => {error => "Server error: Failed to read the ZIP file '$filename'."});
             }
+            # --- END OF THE FIX ---
 
-            if ($zip->extractTree('', "$upload_dir/") != AZ_OK) {
+            if ($zip->extractTree('', "$upload_dir/") != Archive::Zip::AZ_OK) {
                 $self->app->log->error("Failed to extract zip file '$filename' to '$upload_dir'.");
-                # Stop processing and report failure
                 return $self->render(status => 500, json => {error => "Server error: Failed to extract contents from '$filename'."});
             }
 
@@ -1002,10 +1004,8 @@ post '/LLM/upload' => sub {
             push @results, { file => $filename, status => 'unpacked' };
 
         } else {
-            # This is not a ZIP file, so save it directly
+            # This logic was already correct: move the upload to its final destination.
             my $destination_path = Mojo::File->new($upload_dir, $filename);
-
-            # Use move_to to efficiently move the temp file to its final destination
             $upload->move_to($destination_path->to_string);
 
             $self->app->log->info("Successfully saved '$filename' to '$upload_dir'");
@@ -1013,7 +1013,6 @@ post '/LLM/upload' => sub {
         }
     }
 
-    # 6. Report overall success with a summary of actions
     $self->render(status => 200, json => { message => "Upload process completed.", files_processed => \@results });
 };
 
