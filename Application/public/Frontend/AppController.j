@@ -124,8 +124,14 @@ BaseURL=HostURL+"/";
 // this is just to force the prompts popup items in the playground such in case a new prompt is added and the user wants to test it immediately
 - (void)tabView:(CPTabView)aTabView willSelectTabViewItem:(CPTabViewItem)aTabViewItem
 {
-    if ([aTabViewItem label] == "Playground")
+
+    if ([aTabViewItem label] == "Playground" && playgroundTV)
     {
+        // force reload data from the store
+        var entity = projectsController._entity;
+        entity._pkcache = [];
+        [projectsController setContent:[entity allObjects]];
+
         // refresh archived data in the tableview column
         var promptColumn = [playgroundTV tableColumnWithIdentifier:"idprompt"];
         var prototypeButton = [promptColumn dataView];

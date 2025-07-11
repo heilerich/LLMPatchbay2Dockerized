@@ -7,7 +7,7 @@
         <sortDescriptor id="by_id" key="id" numeric="YES"/>
         <sortDescriptor id="by_insertiontime" key="insertion_time" ascending="NO"/>
 
-        <arrayController id="projects_controller" entity="projects" autoFetch="YES" sortDescriptor="by_name"/>
+        <arrayController id="projects_controller" entity="projects" autoFetchSync="YES" sortDescriptor="by_name"/>
         <arrayController id="input_controller" entity="input_data" autoFetchSync="YES" sortDescriptor="by_id"/>
         <arrayController id="output_controller" entity="output_data" valueBinding="input_controller.selection.output" sortDescriptor="by_insertiontime"/>
         <arrayController id="blocks_controller" entity="blocks" valueBinding="projects_controller.selection.blocks" sortDescriptor="by_id"/>

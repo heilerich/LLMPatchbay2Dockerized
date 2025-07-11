@@ -85,7 +85,7 @@
                                     <hspace/>
                                 </hbox>
                                 <scrollView hasHorizontalScroller="YES">
-                                    <tableView zebra="yes"  autosaveName="inputs_tv" valueBinding="#CPOwner.inputController" target="#CPOwner" allowsEmptySelection="NO">
+                                    <tableView zebra="yes"  autosaveName="inputs_tv" id="playground_tv" valueBinding="#CPOwner.inputController" target="#CPOwner" allowsEmptySelection="NO">
                                         <tableColumn identifier="title" title="name" editable="YES"/>
                                         <tableColumn identifier="idprompt" title="Prompt" dataView="#promptspop"/>
                                     </tableView>
