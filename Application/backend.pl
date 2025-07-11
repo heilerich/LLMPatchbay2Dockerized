@@ -15,6 +15,7 @@ use Statistics::R;
 use MIME::Base64;
 use JQ::Lite;
 use XML::XML2JSON;
+use Archive::Zip qw(:constants);
 
 no warnings 'uninitialized';
 
@@ -946,6 +947,74 @@ helper run_llm => sub { my ($self, $prompt, $model, $max_tokens, $system_prompt,
     $self->pg->db->insert('llm_usage_log', {model => $model, prompt => $prompt, response => $text});
 
     return $text;
+};
+
+post '/LLM/upload' => sub {
+    my $self = shift;
+    my $upload_dir = '/upload'; # IMPORTANT: This directory must be writable by the user running the web server.
+
+    # 1. Get all uploaded files from the request.
+    # The form field name in your HTML form should be "files[]".
+    my $uploads = $self->req->uploads('files[]');
+
+    # 2. Ensure we have at least one file uploaded.
+    unless (scalar @$uploads) {
+        return $self->render(status => 400, json => {error => 'No files uploaded. Please use the form field named "files[]".'});
+    }
+
+    # 3. Ensure the destination directory exists. Create it if it doesn't.
+    # It's more efficient to do this once before the loop.
+    my $dir_path = Mojo::File->new($upload_dir);
+    eval {
+        $dir_path->make_path unless -d $dir_path;
+    };
+    if ($@) {
+        $self->app->log->error("Failed to create upload directory '$upload_dir': $@");
+        return $self->render(status => 500, json => {error => "Server configuration error: Could not create upload directory."});
+    }
+
+    my @results; # To keep track of what happened to each file.
+
+    # 4. Process each uploaded file
+    for my $upload (@$uploads) {
+        my $filename = $upload->filename;
+        my $content_type = $upload->headers->content_type;
+
+        # 5. Check if the file is a ZIP archive
+        if ($filename =~ /\.zip$/i && ($content_type eq 'application/zip' || $content_type eq 'application/x-zip-compressed')) {
+            # This is a ZIP file, so we unpack it
+            my $zip      = Archive::Zip->new();
+            my $zip_path = $upload->asset->path; # Get the path to the temporary uploaded file
+
+            if ($zip->read($zip_path) != AZ_OK) {
+                $self->app->log->error("Could not read zip file '$filename' from temp path '$zip_path'.");
+                # Stop processing and report failure for this file
+                return $self->render(status => 500, json => {error => "Server error: Failed to read the ZIP file '$filename'."});
+            }
+
+            if ($zip->extractTree('', "$upload_dir/") != AZ_OK) {
+                $self->app->log->error("Failed to extract zip file '$filename' to '$upload_dir'.");
+                # Stop processing and report failure
+                return $self->render(status => 500, json => {error => "Server error: Failed to extract contents from '$filename'."});
+            }
+
+            $self->app->log->info("Successfully unpacked '$filename' to '$upload_dir'");
+            push @results, { file => $filename, status => 'unpacked' };
+
+        } else {
+            # This is not a ZIP file, so save it directly
+            my $destination_path = Mojo::File->new($upload_dir, $filename);
+
+            # Use move_to to efficiently move the temp file to its final destination
+            $upload->move_to($destination_path->to_string);
+
+            $self->app->log->info("Successfully saved '$filename' to '$upload_dir'");
+            push @results, { file => $filename, status => 'saved' };
+        }
+    }
+
+    # 6. Report overall success with a summary of actions
+    $self->render(status => 200, json => { message => "Upload process completed.", files_processed => \@results });
 };
 
 ###################################################################

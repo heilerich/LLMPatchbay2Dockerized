@@ -1,10 +1,8 @@
 /*
- * Cappuccino frontend for PatchbayLLM
+ * Cappuccino frontend for PatchbayLLM (new version with upload)
  *
- * Created by daboe01 on Dec, 29, 2023 by Daniel Boehringer.
- * Copyright 2023, All rights reserved.
- *
- * Todo: bind label to block data in AppController so no reload is necessary after setting label name
+ * Created by daboe01 on 2025 by Daniel Boehringer.
+ * Copyright 2025, All rights reserved.
  *
  *
  */
@@ -23,6 +21,7 @@ BaseURL=HostURL+"/";
 @import "TNGrowlCenter.j";
 @import "TNGrowlView.j";
 @import "LaceViewController.j";
+@import <Cup/Cup.j>
 
 @implementation FSArrayController(baseReloadFix)
 
@@ -115,6 +114,10 @@ BaseURL=HostURL+"/";
     id  _searchTerm @accessors(property=searchTerm);
     id  _playgroundSearchTerm @accessors(property=playgroundSearchTerm);
     id  playgroundTV;
+    
+    // Upload properties
+    id myCuploader;
+    id queueController;
 
 }
 
@@ -299,6 +302,17 @@ BaseURL=HostURL+"/";
     [outputController reload];
 }
 
+- (void)cup:(Cup)aCup uploadDidCompleteForFile:(CupFile)aFile
+{
+    // remove from list
+    var indexes = [aCup.queue indexesOfObjectsPassingTest:function(file)
+                    {
+                        return  file === aFile;
+                    }];
+    [aCup.queue removeObjectsAtIndexes:indexes];
+    [[aCup queueController] setContent:aCup.queue];
+}
+
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
 {
     store = [[SessionStore alloc] initWithBaseURL:HostURL+"/LLM"];
@@ -306,6 +320,14 @@ BaseURL=HostURL+"/";
     [CPBundle loadRessourceNamed:"model.gsmarkup" owner:self];
     [CPBundle loadRessourceNamed:"gui.gsmarkup" owner:self];
     spinnerImg = [[CPImage alloc] initWithContentsOfFile:[CPString stringWithFormat:@"%@%@", [[CPBundle mainBundle] resourcePath], "spinner.gif"]];
+
+    // Initialize Uploader
+    myCuploader = [[Cup alloc] initWithURL:"/LLM/upload"];
+    queueController = [myCuploader queueController];
+    [myCuploader setDropTarget:[[CPApp mainWindow] contentView]];
+    [myCuploader setAutoUpload:YES];
+    [myCuploader setRemoveCompletedFiles:YES];
+    [myCuploader setDelegate:self];
 
     [[TNGrowlCenter defaultCenter] setView:[[CPApp mainWindow] contentView]];
     [[TNGrowlCenter defaultCenter] setLifeDefaultTime:10];

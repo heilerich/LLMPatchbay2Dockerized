@@ -15,3 +15,4 @@ requires "Text::CSV";
 requires "Statistics::R";
 requires "JQ::Lite";
 requires "XML::XML2JSON";
+requires "Archive::Zip";
