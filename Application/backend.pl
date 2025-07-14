@@ -21,6 +21,14 @@ no warnings 'uninitialized';
 
 helper pg => sub { state $pg = Mojo::Pg->new('postgresql://docker:docker@localhost/llm_patchbay') };
 
+# Check for the NB_PREFIX environment variable and set it as the URL prefix.
+if (my $prefix = $ENV{NB_PREFIX})
+{
+    $prefix = "/$prefix" unless $prefix =~ m{^/};
+    app->static->prefix($prefix);
+    app->log->info("Serving static files from the '$prefix' prefix.");
+}
+
 # turn browser cache off
 hook after_dispatch => sub {
     my $tx = shift;
