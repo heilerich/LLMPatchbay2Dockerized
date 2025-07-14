@@ -27,6 +27,7 @@ jobs:
       with:
         path: cache-mount
         key: cache-mount-${{ hashFiles('Dockerfile') }}
+    - uses: actions/checkout@v4
     - name: Restore Docker cache mounts
       uses: reproducible-containers/buildkit-cache-dance@v3
       with:
