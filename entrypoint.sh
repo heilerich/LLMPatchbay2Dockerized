@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Start the PostgreSQL service
 /etc/init.d/postgresql start
@@ -13,4 +13,4 @@ fi
 
 # Start the main application in the foreground
 echo "Starting LLMPatchbay backend..."
-hypnotoad -f /app/backend.pl
+hypnotoad -f /usr/src/app/backend.pl
