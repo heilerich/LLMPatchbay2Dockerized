@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 
 ENV DEBIAN_FRONTEND=noninteractive 
 
-RUN --mount=target=/var/lib/apt/lists,type=cache --mount=type=cache,target=/var/cache/apt apt-get update && apt-get install --no-install-recommends -y postgresql-common r-base r-recommended pandoc && \
+RUN --mount=target=/var/lib/apt/lists,type=cache --mount=type=cache,target=/var/cache/apt apt-get update && apt-get install --no-install-recommends -y postgresql-common r-base r-recommended pandoc poppler-utils && \
   /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt-get install --no-install-recommends -y postgresql postgresql-17-pgvector
 
 COPY cpanfile /usr/src/app

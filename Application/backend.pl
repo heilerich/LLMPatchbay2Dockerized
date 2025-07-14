@@ -793,26 +793,71 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
         my $input_data  = $inputs->{Input};
         return '' unless $input_data;
 
-        # Determine the input format from block settings, defaulting to 'rtf'.
-        my $from_format = $settings->{from_format} || 'rtf';
+        # --- START: Base64 Autodetection Logic ---
+        # This should run first, as the PDF/RTF/etc. could be Base64 encoded.
+        my $test_str = $input_data;
+        $test_str =~ s/\s//g; # Remove whitespace for length check
 
-        # Sanitize the format to prevent command injection.
-        # Allows alphanumeric chars, underscore, plus, and minus for pandoc extensions (e.g., 'markdown+smart').
+        if (length($test_str) > 4 && length($test_str) % 4 == 0 && $test_str =~ m{^[A-Za-z0-9+/]+={0,2}$}) {
+            warn "Input appears to be Base64-encoded; attempting to decode.";
+            my $decoded_data = MIME::Base64::decode_base64($input_data);
+
+            if (defined $decoded_data && length $decoded_data > 0) {
+                $input_data = $decoded_data;
+            } else {
+                warn "Base64 decoding failed or produced empty output; proceeding with original data.";
+            }
+        }
+
+        # Determine the input/output formats. Use lc() on from_format for case-insensitive matching.
+        my $from_format = lc($settings->{from_format} || 'rtf');
+        my $to_format   = $settings->{to_format} || 'markdown';
+
+        # --- START: PDF Pre-processing Logic ---
+        # If the specified input format is 'pdf', pre-process it with pdftotext.
+        if ($from_format eq 'pdf') {
+            warn "Input format is 'pdf'. Pre-processing with pdftotext.";
+
+            # Write the binary PDF data to a temporary file. Must use binmode.
+            my $temp_pdf_file = Mojo::File->new(Mojo::File::tempfile(SUFFIX => '.pdf'));
+            $temp_pdf_file->spurt({binmode => ':raw'}, $input_data);
+
+            # Execute pdftotext. The trailing '-' tells it to write text to STDOUT.
+            my $pdftotext_path = '/opt/homebrew/bin/pdftotext';
+            my $poppler_command = "$pdftotext_path " . $temp_pdf_file->to_string . " -";
+            warn "Executing Poppler: $poppler_command";
+
+            my $extracted_text = `$poppler_command`;
+
+            # Temp PDF file is automatically removed when $temp_pdf_file goes out of scope.
+
+            if (defined $extracted_text && length $extracted_text > 0) {
+                return $extracted_text;
+            } else {
+                warn "pdftotext failed or extracted no text. Aborting.";
+                return "Error: Failed to extract text from the provided PDF file.";
+            }
+        }
+
+
+        # Sanitize the format to prevent command injection. This will now sanitize
+        # either the original format, or 'plain' if we converted from PDF.
         if ($from_format !~ /^[\w\+\-]+$/) {
             warn "Invalid pandoc 'from_format' specified: '$from_format'. Falling back to 'rtf'.";
             $from_format = 'rtf';
         }
+        if ($to_format !~ /^[\w\+\-]+$/) {
+            warn "Invalid pandoc 'to_format' specified: '$to_format'. Falling back to 'text'.";
+            $to_format = 'markdown';
+        }
 
-        # Determine the output format. 'markdown' if true, otherwise 'plain' text.
-        my $to_format = $settings->{markdown} ? 'markdown' : 'plain';
-
-        # Write input to a temporary file to safely pass it to pandoc
+        # Write final input data (original or text-from-pdf) to a temporary file.
         my $temp_in_file = Mojo::File->new(Mojo::File::tempfile());
         $temp_in_file->spurt($input_data);
 
         # Use backticks to execute pandoc and capture its STDOUT.
-        # Formats are sanitized and input is passed via file to avoid shell injection.
         my $command = "pandoc -f $from_format -t $to_format " . $temp_in_file->to_string;
+        warn "Executing Pandoc: $command";
         my $output  = `$command`;
 
         # The temp file is automatically removed when $temp_in_file goes out of scope.
