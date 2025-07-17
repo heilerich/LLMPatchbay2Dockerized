@@ -38,6 +38,6 @@ VOLUME /var/lib/postgresql/17/main
 # COPY install_ollama.sh /app
 # RUN /app/install_ollama.sh
 
-EXPOSE 3036
+EXPOSE 8888
 
 ENTRYPOINT ["/usr/src/app/entrypoint.sh"]

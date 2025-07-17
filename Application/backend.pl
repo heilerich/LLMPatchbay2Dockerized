@@ -36,7 +36,7 @@ hook after_dispatch => sub {
     my $tx = shift;
     my $e = Mojo::Date->new(time-100);
     $tx->res->headers->header(Expires => $e);
-    $tx->res->headers->header('X-ARGOS-Routing' => '3036');
+    $tx->res->headers->header('X-ARGOS-Routing' => '8888');
 };
 
 # Set up routing - either with or without prefix
@@ -1084,6 +1084,6 @@ $r->post('/LLM/upload' => sub {
 ###################################################################
 # main()
 
-app->config(hypnotoad => {listen => ['http://*:3036'], workers => 5, heartbeat_timeout => 12000, inactivity_timeout => 12000});
+app->config(hypnotoad => {listen => ['http://*:8888'], workers => 5, heartbeat_timeout => 12000, inactivity_timeout => 12000});
 
 app->start;
