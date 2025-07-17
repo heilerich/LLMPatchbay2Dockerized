@@ -11,6 +11,8 @@ if [ ! -f "$PGDIR"/PG_VERSION ]; then
   NEED_INIT=true
 fi
 
+chmod 700 /var/lib/postgresql/17/main
+
 /etc/init.d/postgresql start
 
 if [ "$NEED_INIT" = true ]; then
