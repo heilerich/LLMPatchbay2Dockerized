@@ -22,6 +22,7 @@ no warnings 'uninitialized';
 helper pg => sub { state $pg = Mojo::Pg->new('postgresql://docker:docker@localhost/llm_patchbay') };
 
 my $prefix = $ENV{NB_PREFIX} || '';
+my $inference_proto = $ENV{NB_PREFIX} ? 'http' : 'https';
 
 # Check for the NB_PREFIX environment variable and set it as the URL prefix.
 if ($prefix ne '') 
@@ -29,6 +30,12 @@ if ($prefix ne '')
     $prefix = "/$prefix" unless $prefix =~ m{^/};
     app->static->prefix($prefix);
     app->log->info("Serving from the prefix '$prefix'");
+}
+
+sub startup {
+    my $self = shift;
+    $self->log->level('debug'); # Ensure debug messages are visible for UA logging
+    $self->log->info("Application started and log level set to debug.");
 }
 
 # turn browser cache off
@@ -550,8 +557,10 @@ helper get_result_of_block_id => sub { my ($self, $id, $input, $cache_dict) = @_
             }
         });
 
-        my $tx = $ua->post("https://inference-api.metal.kn.uniklinik-freiburg.de/llm/$model/generate" => json => $params);
-        # warn Dumper $tx;
+        my $tx = $ua->post("$inference_proto://inference-api.metal.kn.uniklinik-freiburg.de/llm/$model/generate" => json => $params);
+        if ($tx->res->is_error) {
+          warn Dumper $tx;
+        }
         my $r = $tx->res->json;
 
         return $r->{generated_text} if exists $r->{generated_text};
@@ -896,7 +905,9 @@ helper get_embedding => sub { my ($self, $endpoint, $model, $prompt, $template) 
 
     $ua->on(start => sub {
         my ($ua, $tx) = @_;
-        $tx->req->headers->authorization("Bearer 36a3430b2d9473438a1447b5f24f69fc");
+        if (my $api_key = $ENV{API_BEARER_TOKEN}) {
+            $tx->req->headers->authorization("Bearer $api_key");
+        }
     });
 
     my $tx = $ua->post($endpoint => json => {inputs => $prompt, truncate => Mojo::JSON->true});
@@ -920,7 +931,9 @@ helper run_llm => sub { my ($self, $prompt, $model, $max_tokens, $system_prompt,
     $ua->connect_timeout(0);
     $ua->on(start => sub    {
         my ($ua, $tx) = @_;
-        $tx->req->headers->authorization("Bearer 36a3430b2d9473438a1447b5f24f69fc");
+        if (my $api_key = $ENV{API_BEARER_TOKEN}) {
+            $tx->req->headers->authorization("Bearer $api_key");
+        }
     });
 
     if ($model =~ /gemma/io)
@@ -952,7 +965,10 @@ helper run_llm => sub { my ($self, $prompt, $model, $max_tokens, $system_prompt,
             }
         };
 
-        my $tx = $ua->post("https://inference-api.metal.kn.uniklinik-freiburg.de/llm/$model/generate" => json => $params);
+        my $tx = $ua->post("$inference_proto://inference-api.metal.kn.uniklinik-freiburg.de/llm/$model/generate" => json => $params);
+        if ($tx->res->is_error) {
+          warn Dumper $tx;
+        }
         my $r = $tx->res->json;
         $text = $r->{generated_text} if exists $r->{generated_text};
     }
@@ -984,7 +1000,10 @@ helper run_llm => sub { my ($self, $prompt, $model, $max_tokens, $system_prompt,
             }
         };
 
-        my $tx = $ua->post("https://inference-api.metal.kn.uniklinik-freiburg.de/llm/$model/generate" => json => $params);
+        my $tx = $ua->post("$inference_proto://inference-api.metal.kn.uniklinik-freiburg.de/llm/$model/generate" => json => $params);
+        if ($tx->res->is_error) {
+          warn Dumper $tx;
+        }
         my $r = $tx->res->json;
         $text = $r->{generated_text} if exists $r->{generated_text};
     }
@@ -995,7 +1014,10 @@ helper run_llm => sub { my ($self, $prompt, $model, $max_tokens, $system_prompt,
             messages => [  {  role => "user", content => $prompt }, {  role => "assistant", content => '<think>'."\n" }  ]
         };
 
-        my $tx = $ua->post("https://inference-api.metal.kn.uniklinik-freiburg.de/llm/$model/v1/chat/completions" => json => $params);
+        my $tx = $ua->post("$inference_proto://inference-api.metal.kn.uniklinik-freiburg.de/llm/$model/v1/chat/completions" => json => $params);
+        if ($tx->res->is_error) {
+          warn Dumper $tx;
+        }
         my $res = $tx->result;
 
         if ($res->is_success)
