@@ -1,5 +1,10 @@
 #!/bin/bash
 
+PGDIR=/var/lib/postgresql/17/main
+if [ ! -d "$PGDIR" ]; then
+  cp -r /tmp/pginit $PGDIR
+fi
+
 # Start the PostgreSQL service
 /etc/init.d/postgresql start
 
@@ -13,4 +18,7 @@ fi
 
 # Start the main application in the foreground
 echo "Starting LLMPatchbay backend..."
-hypnotoad -f /usr/src/app/backend.pl
+hypnotoad -f /usr/src/app/backend.pl &
+tail -f /var/log/postgresql/postgresql-17-main.log &
+
+wait

@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 
 ENV DEBIAN_FRONTEND=noninteractive 
 
-RUN --mount=target=/var/lib/apt/lists,type=cache --mount=type=cache,target=/var/cache/apt apt-get update && apt-get install --no-install-recommends -y postgresql-common r-base r-recommended pandoc poppler-utils && \
+RUN --mount=target=/var/lib/apt/lists,type=cache --mount=type=cache,target=/var/cache/apt apt-get update && apt-get install --no-install-recommends -y postgresql-common r-base r-recommended pandoc poppler-utils tini && \
   /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt-get install --no-install-recommends -y postgresql postgresql-17-pgvector
 
 COPY --chown=postgres:postgres cpanfile /usr/src/app
@@ -27,12 +27,11 @@ RUN /etc/init.d/postgresql start && \
     until pg_isready -U postgres; do echo "Waiting for PostgreSQL..."; sleep 1; done && \
     psql -U postgres --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" 2>&1 | tee /tmp/psql_create_user.log && \
     createdb -U docker llm_patchbay 2>&1 | tee /tmp/psql_createdb.log && \
-    psql -U docker llm_patchbay < sql_template.sql 2>&1 | tee /tmp/psql_import.log
+    psql -U docker llm_patchbay < sql_template.sql 2>&1 | tee /tmp/psql_import.log && \
+    cp -r /var/lib/postgresql/17/main /tmp/pginit
 
 COPY --chown=postgres:postgres entrypoint.sh .
 COPY --chown=postgres:postgres Application .
-
-VOLUME /var/lib/postgresql/17/main
 
 # RUN curl -fsSL https://ollama.com/install.sh | sh
 # COPY install_ollama.sh /app
@@ -40,4 +39,5 @@ VOLUME /var/lib/postgresql/17/main
 
 EXPOSE 8888
 
-ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+# cleanly shutdown postgres by using process group killing
+ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/usr/src/app/entrypoint.sh"]
