@@ -2,6 +2,8 @@
 
 set -e
 
+cd /usr/src/app
+
 NEED_INIT=false
 PGDIR=/var/lib/postgresql/17/main
 if [ ! -f "$PGDIR"/PG_VERSION ]; then
