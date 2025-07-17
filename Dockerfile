@@ -23,13 +23,6 @@ RUN ln -s /usr/bin/R /usr/local/bin/R && \
 USER postgres
 
 COPY --chown=postgres:postgres sql_template.sql .
-RUN /etc/init.d/postgresql start && \
-    until pg_isready -U postgres; do echo "Waiting for PostgreSQL..."; sleep 1; done && \
-    psql -U postgres --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" 2>&1 | tee /tmp/psql_create_user.log && \
-    createdb -U docker llm_patchbay 2>&1 | tee /tmp/psql_createdb.log && \
-    psql -U docker llm_patchbay < sql_template.sql 2>&1 | tee /tmp/psql_import.log && \
-    cp -r /var/lib/postgresql/17/main /tmp/pginit
-
 COPY --chown=postgres:postgres entrypoint.sh .
 COPY --chown=postgres:postgres Application .
 
